@@ -6,13 +6,14 @@ namespace App\Http\Middleware;
 use Closure;
 use Exception;
 use App\Models\Token;
+use App\Helpers\JwtApi;
 use Tymon\JWTAuth\Facades\JWTAuth;
 use Tymon\JWTAuth\Http\Middleware\BaseMiddleware;
 
 
 class JwtMiddleware extends BaseMiddleware
 {
-
+    // use JwtApi;
 	/**
 	 * Handle an incoming request.
 	 *
@@ -41,6 +42,14 @@ class JwtMiddleware extends BaseMiddleware
 		if ( !$token_obj ){
 			//OUR APP DID NOT ISSUED THIS TOKEN, POSSIBLE SECURITY BREACH
 			return response()->json(['status' => 'Token Invalid - bad issuer'], 403);
+		}
+
+        if ($token_obj->ip != JwtApi::getIp() ){
+			return response()->json(['status' => 'Token Invalid for this IP'], 403);
+		}
+
+        if ($token_obj->device != JwtApi::getUserAgent() ){
+			return response()->json(['status' => 'Token Invalid for this device'], 403);
 		}
         
         return $next($request);

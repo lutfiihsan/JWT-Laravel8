@@ -13,16 +13,20 @@ class Token extends Model
     protected $table = 'tokens';
     protected $fillable = array(
         'user_id',
+        'ip',
         'value',
         'jti',
+        'device',
         'type',
         'pair',
         'status',
-        'payload'
+        'payload',
+        'grants'
     );
 
     protected $casts = [
-        'payload' => 'array'
+        'payload' => 'array',
+        'grants' => 'array'
     ];
 
     function user() {

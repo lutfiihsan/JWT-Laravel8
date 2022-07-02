@@ -8,6 +8,7 @@ use App\Models\User;
 use App\Models\Token;
 
 
+use App\Helpers\JwtApi;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
@@ -15,6 +16,7 @@ use Illuminate\Support\Facades\Validator;
 
 class AuthController extends Controller
 {
+    // use JwtApi;
     /**
      * Create a new AuthController instance.
      *
@@ -108,7 +110,7 @@ class AuthController extends Controller
     }
 
     public function logoutall(Request $request){
-        foreach( auth()->user()->token as $token_obj ){
+        foreach( auth()->user()->authTokens() as $token_obj ){
             try{
             auth()->setToken( $token_obj->value )->invalidate(true);
             }
@@ -157,6 +159,8 @@ class AuthController extends Controller
             'jti' => auth()->payload()->get('jti'),
             'type' => auth()->payload()->get('xtype'),
             'payload' => auth()->payload()->toArray(),
+            'ip' => JwtApi::getIp(),
+            'device' => JwtApi::getUserAgent()
         ]);
 
         $refresh_token = auth()->claims([
@@ -176,6 +180,8 @@ class AuthController extends Controller
             'type' => auth()->setToken($refresh_token)->payload()->get('xtype'),
             'pair' => $access_token_obj->id,
             'payload' => auth()->setToken($refresh_token)->payload()->toArray(),
+            'ip' => JwtApi::getIp(),
+            'device' => JwtApi::getUserAgent()
         ]);
 
         $access_token_obj->pair = $refresh_token_obj->id;
@@ -184,5 +190,41 @@ class AuthController extends Controller
         return response()->json($response_array);
     }
 	
-	
+	/**
+     * Issue resource token
+     * @param id, name, email as bool
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function tokenIssue(Request $request){
+        $validate = Validator::make($request->all(), [
+            'id' => 'required|boolean',
+            'name' => 'required|boolean',
+            'email' => 'required|boolean'
+        ]);
+
+        if ( $validate->fails() ){
+            return response()->json(['message' => 'Error! Bad input.'], 400);
+        }
+
+        $resource_token = auth()->claims([
+            'xtype' => 'resource'
+            ])->setTTL(60 * 24 * 365)->tokenById(auth()->user()->id); //expire in 1 year
+
+        $resource_token_obj = Token::create([
+            'user_id' => auth()->user()->id,
+            'value' => $resource_token,
+            'jti' => auth()->setToken($resource_token)->payload()->get('jti'),
+            'type' => auth()->setToken($resource_token)->payload()->get('xtype'),
+            'pair' => null,
+            'payload' => auth()->setToken($resource_token)->payload()->toArray(),
+            'grants' => [
+                'id' => $request->input('id'),
+                'name' => $request->input('name'),
+                'email' => $request->input('email')
+            ],
+            'ip' => null,
+            'device' => null
+        ]);
+        return response()->json(['token' => $resource_token]);
+    }
 }

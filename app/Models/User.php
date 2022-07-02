@@ -67,4 +67,8 @@ class User extends Authenticatable implements JWTSubject
     function token() {
         return $this->hasMany( 'App\Models\Token', 'user_id' );
     }
+
+    function authTokens() {
+        return $this->hasMany( 'App\Models\Token', 'user_id' )->where('type', 'auth')->orWhere('type','refresh')->get();
+    }
 }

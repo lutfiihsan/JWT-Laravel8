@@ -27,6 +27,18 @@ Route::group([
     Route::post('refresh', [App\Http\Controllers\AuthController::class, 'refresh']);
     Route::post('me', [App\Http\Controllers\AuthController::class, 'me']);
     Route::post('register', [App\Http\Controllers\AuthController::class, 'register']);
+    Route::post('token/issue', [App\Http\Controllers\AuthController::class, 'tokenIssue']);
+});
+
+Route::group([
+
+    'middleware' => 'api',
+    'prefix' => 'v1'
+
+], function ($router) {
+
+    Route::get('resource/user', [App\Http\Controllers\ResController::class, 'user']);
+
 });
 
 Route::any('{any}', function(){

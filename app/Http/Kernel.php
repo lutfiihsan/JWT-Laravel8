@@ -66,5 +66,6 @@ class Kernel extends HttpKernel
         'jwt.verify' => \App\Http\Middleware\JwtMiddleware::class,
         'jwt.xauth' => \App\Http\Middleware\JwtXAuth::class, //WE ADDED THIS!
         'jwt.xrefresh' => \App\Http\Middleware\JwtXRefresh::class, //WE ADDED THIS!
+        'jwt.xresource' => \App\Http\Middleware\JwtXResource::class, //WE ADDED THIS!
     ];
 }
